@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { runAnalysis } from '../lib/analysis';
+import { runAnalysis, hasProvidedVersion } from '../lib/analysis';
 import type { AnalysisResult, ParsedInputs } from '../lib/types';
 import { loadInputs } from '../lib/inputStorage';
 import CarrierMatrix from '../components/CarrierMatrix';
@@ -31,9 +31,12 @@ export default function AnalysisPage() {
     );
   }
 
-  if (!inputs || !result) {
+  if (!inputs || (!inputs.v3 && !inputs.v4) || !result) {
     return <Navigate to="/" replace />;
   }
+
+  const hasV3 = hasProvidedVersion(inputs, 'v3');
+  const hasV4 = hasProvidedVersion(inputs, 'v4');
 
   return (
     <div className="page">
@@ -45,6 +48,12 @@ export default function AnalysisPage() {
               Matrix 1 — liner/carrier offer &amp; schedule counts with duplicate
               sailing detection. Expand a row to see per-offer details.
             </p>
+            {hasV3 !== hasV4 && (
+              <p className="version-note">
+                {hasV3 ? 'v3' : 'v4'} only —{' '}
+                {hasV3 ? 'v4' : 'v3'} columns and subsections are empty.
+              </p>
+            )}
           </div>
           <Link to="/" className="btn-secondary">
             ← New comparison
@@ -103,8 +112,10 @@ export default function AnalysisPage() {
         </p>
         <CarrierMatrix
           rows={result.rows}
-          v3Schedules={inputs.v3.schedules ?? {}}
-          v4Schedules={inputs.v4.data?.schedules ?? {}}
+          hasV3={hasV3}
+          hasV4={hasV4}
+          v3Schedules={inputs.v3?.schedules ?? {}}
+          v4Schedules={inputs.v4?.data?.schedules ?? {}}
           onViewJson={setJsonView}
         />
       </section>

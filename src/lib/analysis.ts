@@ -4,7 +4,9 @@ import type {
   CarrierVersionStats,
   ParsedInputs,
   V3Offer,
+  V3Response,
   V4Offer,
+  V4Response,
 } from './types';
 import {
   buildVendorNameLookup,
@@ -57,24 +59,50 @@ export function parseJsonInput(raw: string, label: string): unknown {
   }
 }
 
-export function validateInputs(v3Raw: unknown, v4Raw: unknown): ParsedInputs {
-  const v3 = v3Raw as ParsedInputs['v3'];
-  const v4 = v4Raw as ParsedInputs['v4'];
+export function validateInputs(
+  v3Raw: unknown | null,
+  v4Raw: unknown | null,
+): ParsedInputs {
+  const hasV3 = v3Raw !== null;
+  const hasV4 = v4Raw !== null;
 
-  if (!v3?.offers || !Array.isArray(v3.offers)) {
-    throw new Error('v3 response must have an "offers" array at the root.');
+  if (!hasV3 && !hasV4) {
+    throw new Error('Provide at least one API response (v3 or v4).');
   }
-  if (!v4?.data?.offers || !Array.isArray(v4.data.offers)) {
-    throw new Error('v4 response must have "data.offers" array.');
+
+  let v3: ParsedInputs['v3'] = null;
+  let v4: ParsedInputs['v4'] = null;
+
+  if (hasV3) {
+    const parsed = v3Raw as V3Response;
+    if (!parsed?.offers || !Array.isArray(parsed.offers)) {
+      throw new Error('v3 response must have an "offers" array at the root.');
+    }
+    v3 = parsed;
+  }
+
+  if (hasV4) {
+    const parsed = v4Raw as V4Response;
+    if (!parsed?.data?.offers || !Array.isArray(parsed.data.offers)) {
+      throw new Error('v4 response must have "data.offers" array.');
+    }
+    v4 = parsed;
   }
 
   return { v3, v4 };
 }
 
+export function hasProvidedVersion(
+  inputs: ParsedInputs,
+  version: 'v3' | 'v4',
+): boolean {
+  return version === 'v3' ? inputs.v3 !== null : inputs.v4 !== null;
+}
+
 export function runAnalysis(inputs: ParsedInputs): AnalysisResult {
   const { v3, v4 } = inputs;
-  const v3Schedules = v3.schedules ?? {};
-  const v4Schedules = v4.data?.schedules ?? {};
+  const v3Schedules = v3?.schedules ?? {};
+  const v4Schedules = v4?.data?.schedules ?? {};
   const warnings: string[] = [];
 
   const rowMap = new Map<string, CarrierMatrixRow>();
@@ -114,9 +142,9 @@ export function runAnalysis(inputs: ParsedInputs): AnalysisResult {
     }
   >();
 
-  const vendorNames = buildVendorNameLookup(v4.data?.offers ?? []);
+  const vendorNames = buildVendorNameLookup(v4?.data?.offers ?? []);
 
-  for (const offer of v3.offers ?? []) {
+  for (const offer of v3?.offers ?? []) {
     const carrierId = getCarrierIdFromOffer('v3', offer);
     const label = getCarrierLabelFromOffer('v3', offer);
     const logo = getCarrierLogoFromOffer('v3', offer);
@@ -139,7 +167,7 @@ export function runAnalysis(inputs: ParsedInputs): AnalysisResult {
     bucket.normalized.push(norm);
   }
 
-  for (const offer of v4.data?.offers ?? []) {
+  for (const offer of v4?.data?.offers ?? []) {
     const carrierId = getCarrierIdFromOffer('v4', offer);
     const label = getCarrierLabelFromOffer('v4', offer);
     const logo = getCarrierLogoFromOffer('v4', offer);
@@ -174,8 +202,8 @@ export function runAnalysis(inputs: ParsedInputs): AnalysisResult {
 
   const rows = sortCarrierRows([...rowMap.values()]);
 
-  const v3OfferCount = v3.offers?.length ?? 0;
-  const v4OfferCount = v4.data?.offers?.length ?? 0;
+  const v3OfferCount = v3?.offers?.length ?? 0;
+  const v4OfferCount = v4?.data?.offers?.length ?? 0;
   const v3ValidCount = rows.reduce((s, r) => s + r.v3.offerCount, 0);
   const v4ValidCount = rows.reduce((s, r) => s + r.v4.offerCount, 0);
 

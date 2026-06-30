@@ -6,12 +6,15 @@ import type { JsonViewerState } from './JsonViewerModal';
 
 interface Props {
   rows: CarrierMatrixRow[];
+  hasV3: boolean;
+  hasV4: boolean;
   v3Schedules: Record<string, ScheduleEntry>;
   v4Schedules: Record<string, ScheduleEntry>;
   onViewJson: (state: JsonViewerState) => void;
 }
 
-function StatCell({ value }: { value: number }) {
+function StatCell({ value, empty }: { value: number; empty?: boolean }) {
+  if (empty) return <td className="num muted-stat">—</td>;
   return <td className="num">{value}</td>;
 }
 
@@ -24,11 +27,16 @@ function PerOfferStatCell({
   offers,
   pick,
   highlightNonZero,
+  empty,
 }: {
   offers: NormalizedOffer[];
   pick: (o: NormalizedOffer) => number;
   highlightNonZero?: boolean;
+  empty?: boolean;
 }) {
+  if (empty) {
+    return <td className="num list-stat muted-stat">—</td>;
+  }
   const values = offers.map(pick);
   const highlight = highlightNonZero && values.some((v) => v > 0);
   return (
@@ -60,6 +68,8 @@ function CarrierLabelRow({
 
 export default function CarrierMatrix({
   rows,
+  hasV3,
+  hasV4,
   v3Schedules,
   v4Schedules,
   onViewJson,
@@ -86,11 +96,11 @@ export default function CarrierMatrix({
           <tr>
             <th aria-label="Expand" />
             <th>Liner / Carrier (grouped by ID)</th>
-            <th colSpan={3} className="group-head group-v3">
-              v3
+            <th colSpan={3} className={`group-head group-v3${hasV3 ? '' : ' group-empty'}`}>
+              v3{!hasV3 && <span className="group-empty-label"> (not loaded)</span>}
             </th>
-            <th colSpan={3} className="group-head group-v4">
-              v4
+            <th colSpan={3} className={`group-head group-v4${hasV4 ? '' : ' group-empty'}`}>
+              v4{!hasV4 && <span className="group-empty-label"> (not loaded)</span>}
             </th>
           </tr>
           <tr className="subhead">
@@ -151,25 +161,29 @@ export default function CarrierMatrix({
                       <div className="carrier-label muted">No offers</div>
                     )}
                   </td>
-                  <StatCell value={row.v3.offerCount} />
+                  <StatCell value={row.v3.offerCount} empty={!hasV3} />
                   <PerOfferStatCell
                     offers={row.v3.offers}
                     pick={(o) => o.scheduleCount}
+                    empty={!hasV3}
                   />
                   <PerOfferStatCell
                     offers={row.v3.offers}
                     pick={(o) => o.duplicateScheduleCount}
                     highlightNonZero
+                    empty={!hasV3}
                   />
-                  <StatCell value={row.v4.offerCount} />
+                  <StatCell value={row.v4.offerCount} empty={!hasV4} />
                   <PerOfferStatCell
                     offers={row.v4.offers}
                     pick={(o) => o.scheduleCount}
+                    empty={!hasV4}
                   />
                   <PerOfferStatCell
                     offers={row.v4.offers}
                     pick={(o) => o.duplicateScheduleCount}
                     highlightNonZero
+                    empty={!hasV4}
                   />
                 </tr>
                 {isOpen && (
@@ -179,28 +193,55 @@ export default function CarrierMatrix({
                         className="expand-panel"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {(row.v3.excludedCount > 0 ||
-                          row.v4.excludedCount > 0) && (
+                        {hasV3 && row.v3.excludedCount > 0 && (
                           <p className="excluded-note">
-                            Excluded (missing ocean/L3 leg): v3=
-                            {row.v3.excludedCount}, v4={row.v4.excludedCount}
+                            Excluded v3 offers (missing ocean/FREIGHT leg):{' '}
+                            {row.v3.excludedCount}
                           </p>
                         )}
-                        <OfferSubsection
-                          offers={row.v3.offers}
-                          version="v3"
-                          carrierId={row.carrierId}
-                          schedules={v3Schedules}
-                          fallbackLogo={row.v4Logo}
-                          onViewJson={onViewJson}
-                        />
-                        <OfferSubsection
-                          offers={row.v4.offers}
-                          version="v4"
-                          carrierId={row.carrierId}
-                          schedules={v4Schedules}
-                          onViewJson={onViewJson}
-                        />
+                        {hasV4 && row.v4.excludedCount > 0 && (
+                          <p className="excluded-note">
+                            Excluded v4 offers (missing L3 leg):{' '}
+                            {row.v4.excludedCount}
+                          </p>
+                        )}
+                        {hasV3 ? (
+                          <OfferSubsection
+                            offers={row.v3.offers}
+                            version="v3"
+                            carrierId={row.carrierId}
+                            schedules={v3Schedules}
+                            fallbackLogo={row.v4Logo}
+                            onViewJson={onViewJson}
+                          />
+                        ) : (
+                          <OfferSubsection
+                            offers={[]}
+                            version="v3"
+                            carrierId={row.carrierId}
+                            schedules={v3Schedules}
+                            versionProvided={false}
+                            onViewJson={onViewJson}
+                          />
+                        )}
+                        {hasV4 ? (
+                          <OfferSubsection
+                            offers={row.v4.offers}
+                            version="v4"
+                            carrierId={row.carrierId}
+                            schedules={v4Schedules}
+                            onViewJson={onViewJson}
+                          />
+                        ) : (
+                          <OfferSubsection
+                            offers={[]}
+                            version="v4"
+                            carrierId={row.carrierId}
+                            schedules={v4Schedules}
+                            versionProvided={false}
+                            onViewJson={onViewJson}
+                          />
+                        )}
                       </div>
                     </td>
                   </tr>

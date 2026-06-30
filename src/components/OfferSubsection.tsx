@@ -60,6 +60,7 @@ interface Props {
   carrierId: string;
   schedules: Record<string, ScheduleEntry>;
   fallbackLogo?: string | null;
+  versionProvided?: boolean;
   onViewJson: (state: JsonViewerState) => void;
 }
 
@@ -85,8 +86,19 @@ export default function OfferSubsection({
   carrierId,
   schedules,
   fallbackLogo,
+  versionProvided = true,
   onViewJson,
 }: Props) {
+  if (!versionProvided) {
+    return (
+      <div className="offer-subsection offer-subsection-empty">
+        <p className="empty-subsection">
+          No {version.toUpperCase()} data loaded.
+        </p>
+      </div>
+    );
+  }
+
   if (offers.length === 0) {
     return (
       <p className="empty-subsection">

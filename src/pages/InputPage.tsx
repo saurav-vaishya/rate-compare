@@ -30,8 +30,10 @@ export default function InputPage() {
     setError(null);
     setLoading(true);
     try {
-      const v3Parsed = parseJsonInput(v3Text, 'v3');
-      const v4Parsed = parseJsonInput(v4Text, 'v4');
+      const hasV3 = v3Text.trim().length > 0;
+      const hasV4 = v4Text.trim().length > 0;
+      const v3Parsed = hasV3 ? parseJsonInput(v3Text, 'v3') : null;
+      const v4Parsed = hasV4 ? parseJsonInput(v4Text, 'v4') : null;
       const inputs = validateInputs(v3Parsed, v4Parsed);
       saveInputs(inputs);
       navigate('/analysis');
@@ -42,14 +44,14 @@ export default function InputPage() {
     }
   }
 
-  const canAnalyze = v3Text.trim().length > 0 && v4Text.trim().length > 0;
+  const canAnalyze = v3Text.trim().length > 0 || v4Text.trim().length > 0;
 
   return (
     <div className="page">
       <header className="page-header">
         <h1>Rate Compare Utility</h1>
         <p className="subtitle">
-          Paste or upload complete v3 and v4 API JSON responses. All processing
+          Paste or upload one or both v3 and v4 API JSON responses. All processing
           runs locally in your browser — nothing is sent to a server.
         </p>
       </header>
@@ -81,8 +83,8 @@ export default function InputPage() {
             spellCheck={false}
           />
           <p className="hint">
-            Root must include <code>offers</code> array. Ocean leg = FREIGHT/BUY
-            charges.
+            Optional. Root must include <code>offers</code> array. Ocean leg =
+            FREIGHT/BUY charges.
           </p>
         </section>
 
@@ -112,8 +114,8 @@ export default function InputPage() {
             spellCheck={false}
           />
           <p className="hint">
-            Root must include <code>data.offers</code>. Each offer must have an
-            L3 leg with charges.
+            Optional. Root must include <code>data.offers</code>. Each offer must
+            have an L3 leg with charges.
           </p>
         </section>
       </div>

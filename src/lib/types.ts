@@ -183,6 +183,6 @@ export interface AnalysisResult {
 }
 
 export interface ParsedInputs {
-  v3: V3Response;
-  v4: V4Response;
+  v3: V3Response | null;
+  v4: V4Response | null;
 }

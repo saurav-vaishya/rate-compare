@@ -577,6 +577,40 @@ code {
   color: #065f46;
 }
 
+.muted-stat {
+  color: #9aa3ad;
+}
+
+.version-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7580;
+}
+
+.group-head.group-empty {
+  opacity: 0.65;
+}
+
+.group-empty-label {
+  font-weight: 500;
+  font-size: 0.72rem;
+}
+
+.offer-subsection-empty {
+  margin-bottom: 1rem;
+}
+
+.offer-subsection-empty .empty-subsection {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed #d5dbe3;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-style: normal;
+  text-align: center;
+}
+
 .empty,
 .empty-subsection {
   color: #6b7580;
