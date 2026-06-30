@@ -142,6 +142,7 @@ export interface NormalizedOffer {
   oceanFreightCost: number | null;
   serviceType: string;
   attachedScheduleSailingDays: string[];
+  attachedScheduleSailingDates: string[];
   tariff: string;
   cargoType: string;
   transitTime: string;

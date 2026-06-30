@@ -17,19 +17,43 @@ function normalizeVoyage(voyage: string): string {
  * Identity of a single sailing: vessel + voyage + POL departure + POD arrival.
  * Uses the first ocean leg (skips transship placeholder legs with vessel "N/A").
  */
+function pickMainScheduleLeg(schedule: ScheduleEntry) {
+  const details = schedule.scheduleDetails ?? [];
+  return (
+    details.find((d) => {
+      const vessel = d.transport?.vessel?.name ?? '';
+      const mode = d.transport?.transportMode ?? '';
+      return vessel && vessel !== 'N/A' && mode !== 'RAIL';
+    }) ?? details[0]
+  );
+}
+
+/**
+ * Departure date for a schedule (YYYY-MM-DD), aligned with sailing fingerprint logic.
+ */
+export function scheduleSailingDate(
+  _scheduleId: string,
+  schedule: ScheduleEntry | undefined,
+): string | null {
+  if (!schedule) return null;
+
+  const mainLeg = pickMainScheduleLeg(schedule);
+  const raw =
+    mainLeg?.fromLocation?.departure ??
+    schedule.fromLocation?.departure ??
+    schedule.sailingDate;
+
+  if (!raw) return null;
+  return raw.slice(0, 10);
+}
+
 export function sailingFingerprint(
   scheduleId: string,
   schedule: ScheduleEntry | undefined,
 ): string {
   if (!schedule) return `missing:${scheduleId}`;
 
-  const details = schedule.scheduleDetails ?? [];
-  const mainLeg =
-    details.find((d) => {
-      const vessel = d.transport?.vessel?.name ?? '';
-      const mode = d.transport?.transportMode ?? '';
-      return vessel && vessel !== 'N/A' && mode !== 'RAIL';
-    }) ?? details[0];
+  const mainLeg = pickMainScheduleLeg(schedule);
 
   if (mainLeg) {
     const fl = mainLeg.fromLocation ?? {};

@@ -7,6 +7,7 @@ import type {
 } from './types';
 import {
   countDuplicateSailingsWithinOffer,
+  scheduleSailingDate,
   scheduleSailingDays,
 } from './scheduleUtils';
 
@@ -235,6 +236,9 @@ export function normalizeV3Offer(
   const sailingDays = scheduleIds
     .map((id) => scheduleSailingDays(id, schedules[id]))
     .filter((d): d is string => d !== null);
+  const sailingDates = scheduleIds
+    .map((id) => scheduleSailingDate(id, schedules[id]))
+    .filter((d): d is string => d !== null);
 
   return {
     apiVersion: 'v3',
@@ -248,6 +252,7 @@ export function normalizeV3Offer(
     oceanFreightCost: v3OceanFreight(offer),
     serviceType: v3ServiceType(offer),
     attachedScheduleSailingDays: sailingDays,
+    attachedScheduleSailingDates: sailingDates,
     tariff: pp.linerReferenceId ?? '—',
     cargoType: pp.cargoType ?? '—',
     transitTime: String(pp.transitTimeInDays ?? '—'),
@@ -282,6 +287,9 @@ export function normalizeV4Offer(
   const sailingDays = scheduleIds
     .map((id) => scheduleSailingDays(id, schedules[id]))
     .filter((d): d is string => d !== null);
+  const sailingDates = scheduleIds
+    .map((id) => scheduleSailingDate(id, schedules[id]))
+    .filter((d): d is string => d !== null);
 
   const origin = m.origins?.[0]?.code ?? '?';
   const dest = m.destinations?.[0]?.code ?? '?';
@@ -298,6 +306,7 @@ export function normalizeV4Offer(
     oceanFreightCost: v4OceanFreight(offer),
     serviceType: v4ServiceType(offer),
     attachedScheduleSailingDays: sailingDays,
+    attachedScheduleSailingDates: sailingDates,
     tariff: m.tariffDetails?.tariffNumber ?? '—',
     cargoType: m.cargoType ?? '—',
     transitTime: String(m.transitTime ?? '—'),

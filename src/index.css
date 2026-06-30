@@ -509,6 +509,26 @@ code {
   color: #3d4650;
 }
 
+.sailing-dates-cell {
+  color: #3d4650;
+  vertical-align: middle;
+}
+
+.sailing-dates-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.sailing-date-item {
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .route-cell {
   white-space: nowrap;
 }

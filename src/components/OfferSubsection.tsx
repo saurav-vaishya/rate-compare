@@ -10,6 +10,22 @@ function formatCurrency(value: number | null): string {
   return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function SailingDatesList({ dates }: { dates: string[] }) {
+  if (dates.length === 0) return <>—</>;
+
+  const unique = [...new Set(dates)].sort();
+
+  return (
+    <span className="sailing-dates-list">
+      {unique.map((date) => (
+        <span key={date} className="sailing-date-item">
+          {date}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function formatSailingDaysSummary(days: string[]): { display: string; title: string } {
   if (days.length === 0) return { display: '—', title: '' };
 
@@ -157,6 +173,7 @@ export default function OfferSubsection({
               <th className="col-money">Ocean freight</th>
               <th>Service</th>
               <th>Sailing days</th>
+              <th>Sailing dates</th>
               <th>Tariff</th>
               <th>Route</th>
               <th className="col-num">Transit</th>
@@ -178,6 +195,9 @@ export default function OfferSubsection({
                   <td>{o.serviceType}</td>
                   <td className="sailing-days-cell" title={sailing.title || undefined}>
                     {sailing.display}
+                  </td>
+                  <td className="sailing-dates-cell">
+                    <SailingDatesList dates={o.attachedScheduleSailingDates} />
                   </td>
                   <td className="mono">{o.tariff}</td>
                   <td className="route-cell">
